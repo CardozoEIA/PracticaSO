@@ -8,7 +8,7 @@ SERVICE_NAME="fastapi"
 PYTHON_VERSION="python3"
 PORT=8000
 
-echo " Iniciando configuración del entorno para FastAPI..."
+echo " Iniciando configuración del entorno para FastAPI"
 
 # === Actualizar sistema ===
 sudo apt update && sudo apt upgrade -y

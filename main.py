@@ -40,7 +40,7 @@ def read_item(item_id: int, query: str = None):
 @app.post("/insert/")
 def create_item(item: Item):
     try:
-        file_key = f"usuarios/{item.cedula}.json"
+        file_key = f"{item.cedula}.json"
    
         json_data = json.dumps(item.dict(), indent=4)
 
@@ -51,9 +51,12 @@ def create_item(item: Item):
             Body=json_data,
             ContentType="application/json"
         )
+        respuesta = s3.list_objects_v2(Bucket=bucket_name)
+        cont = respuesta.get('KeyCount', 0)
 
         return {
-            "message": "Datos guardados correctamente en S3"
+            "message": "Datos guardados correctamente en S3",
+            "archivos totales": cont
         }
 
     except NoCredentialsError:
