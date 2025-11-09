@@ -1,67 +1,32 @@
 #!/bin/bash
-set -e  # Detiene el script si ocurre un error
 
-# === CONFIGURACIÓN ===
-APP_DIR="/home/ubuntu/fastapi_app"
-REPO_URL="https://github.com/CardozoEIA/PracticaSO.git"   # <-- cámbialo
-SERVICE_NAME="fastapi"
-PYTHON_VERSION="python3"
-PORT=8000
-
-echo " Iniciando configuración del entorno para FastAPI"
-
-# === Actualizar sistema ===
+# Actualizar paquetes
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y git $PYTHON_VERSION $PYTHON_VERSION-venv
 
-# === Clonar o actualizar el repositorio ===
-if [ ! -d "$APP_DIR" ]; then
-  echo " Clonando repositorio..."
-  git clone $REPO_URL $APP_DIR
-else
-  echo " Actualizando repositorio existente..."
-  cd $APP_DIR
-  git pull
-fi
+# Instalar python3, pip y venv si no están
+sudo apt install python3 python3-venv python3-pip unzip curl -y
 
-# === Crear entorno virtual ===
-cd $APP_DIR
-if [ ! -d "venv" ]; then
-  echo " Creando entorno virtual"
-  $PYTHON_VERSION -m venv venv
-fi
+# Crear entorno virtual
+python3 -m venv ~/fastapi_app/venv
 
-# === Instalar dependencias ===
-source venv/bin/activate
-echo "Instalando dependencias desde requirements.txt"
+# Activar entorno
+source ~/fastapi_app/venv/bin/activate
+
+# Clonar repo de GitHub
+git clone https://github.com/CardozoEIA/PracticaSO.git ~/fastapi_app
+
+# Ir a la carpeta del proyecto
+cd ~/fastapi_app
+
+# Instalar dependencias
 pip install --upgrade pip
 pip install -r requirements.txt
-deactivate
 
-# === Crear servicio systemd ===
-SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-
-echo "Creando servicio systemd en $SERVICE_FILE ..."
-sudo bash -c "cat > $SERVICE_FILE" <<EOL
-[Unit]
-Description=FastAPI Service
-After=network.target
-
-[Service]
-User=ubuntu
-Group=ubuntu
-WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port $PORT
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=multi-user.target
-EOL
-
-# === Activar servicio ===
+# Crear servicio systemd
+sudo cp fastapi.srv /etc/systemd/system/fastapi.service
 sudo systemctl daemon-reload
-sudo systemctl enable $SERVICE_NAME
-sudo systemctl start $SERVICE_NAME
+sudo systemctl enable fastapi
+sudo systemctl start fastapi
 
-echo "Servicio $SERVICE_NAME levantado correctamente."
+# Verificar estado
+sudo systemctl status fastapi
